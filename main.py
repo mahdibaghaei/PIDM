@@ -17,6 +17,9 @@ import scipy.stats
 
 from itertools import cycle
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 def train_source(args):
     if os.path.exists(osp.join(args.output_dir, "source_C_val.pt")):
         print("train_file exist,",args.output_dir)
@@ -24,8 +27,8 @@ def train_source(args):
     source_loader,source_val_loader, _, _, target_loader_val, \
     target_loader_test, class_list = return_dataset(args)
     netF,netC,_=get_model(args)
-    netF=netF.cuda()
-    netC=netC.cuda()
+    netF = netF.to(device)
+    netC = netC.to(device)
     param_group = []
     learning_rate = args.lr
     for k, v in netF.features.named_parameters():
@@ -117,8 +120,8 @@ def test_target(args):
     args.modelpath = args.output_dir + '/source_C_val.pt'
     netC.load_state_dict(torch.load(args.modelpath))
 
-    netF=nn.DataParallel(netF,device_ids=[0])
-    netC=nn.DataParallel(netC,device_ids=[0])
+    netF = nn.DataParallel(netF, device_ids=[0]).to(device)
+    netC = nn.DataParallel(netC, device_ids=[0]).to(device)
 
     netC=netC.cuda()
     netF=netF.cuda()
@@ -308,8 +311,8 @@ def train_target(args):
             #print(time.time()-start)
             inputs_x, targets_x = inputs_x.cuda(), targets_x.cuda(non_blocking=True)
 
-            inputs_u = inputs_u.cuda()
-            inputs_u2 = inputs_u2.cuda()
+            inputs_u = inputs_u.to(device)
+            inputs_u2 = inputs_u2.to(device)
             #print(time.time()-start)
             entropy_a=None
             #with torch.cuda.amp.autocast():
@@ -730,7 +733,7 @@ def compute_stride(loader,netF,netC,args,istarget=False):
 
                 inputs = data[0]
                 # labels = data[1]
-                inputs = inputs.cuda()
+                inputs = inputs.to(device)
                 feas = netF(inputs)
                 outputs = netC(feas)
                 # yield (feas,outputs,labels)
@@ -762,7 +765,7 @@ def compute(loader,netF,netC,args):
             data = iter_test.next()
             inputs = data[0]
             labels = data[1]
-            inputs = inputs.cuda()
+            inputs = inputs.to(device)
             feas = netF(inputs)
             outputs = netC(feas)
             # yield (feas,outputs,labels)
@@ -818,8 +821,8 @@ def cal_acc(loader, netF, netC):
             data = iter_test.next()
             inputs = data[0]
             labels = data[1]
-            inputs = inputs.cuda()
-            labels=labels.cuda()#2020 07 06
+            inputs = inputs.to(device)
+            labels=labels.to(device)#2020 07 06
             # inputs = inputs
             outputs= netC(netF(inputs))
             # outputs,margin_logits = netC(netF(inputs),labels)
@@ -849,8 +852,8 @@ def cal_acc11111111111111111(loader, netF, netC):
             data = iter_test.next()
             inputs = data[0]
             labels = data[1]
-            inputs = inputs.cuda()
-            labels=labels.cuda()#2020 07 06
+            inputs = inputs.to(device)
+            labels=labels.to(device)#2020 07 06
             # inputs = inputs
             embs=netF(inputs)
             outputs= netC(embs)
