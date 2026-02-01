@@ -120,8 +120,8 @@ def test_target(args):
     args.modelpath = args.output_dir + '/source_C_val.pt'
     netC.load_state_dict(torch.load(args.modelpath))
 
-    netF = nn.DataParallel(netF, device_ids=[0]).to(device)
-    netC = nn.DataParallel(netC, device_ids=[0]).to(device)
+    netF = nn.DataParallel(netF).to(device)
+    netC = nn.DataParallel(netC).to(device)
 
     netC=netC.cuda()
     netF=netF.cuda()
@@ -263,8 +263,8 @@ def train_target(args):
     # vat_loss=VATLoss()
 
     scaler = torch.cuda.amp.GradScaler()
-    netF=nn.DataParallel(netF,device_ids=[0])
-    netC=nn.DataParallel(netC,device_ids=[0])
+    netF=nn.DataParallel(netF).to(device)
+    netC=nn.DataParallel(netC).to(device)
 
     max_pred_acc=-1
     best_test_acc = -1
